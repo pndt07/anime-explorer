@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -9,151 +8,138 @@
       --bg: #111;
       --text: #fff;
       --card: #222;
+      --link: #1e90ff;
     }
     [data-theme="light"] {
       --bg: #f0f0f0;
       --text: #000;
       --card: #fff;
-    }
+      --link: #0066cc;
+    }body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', sans-serif;
+  color: var(--text);
+  background-color: var(--bg);
+  transition: background 0.3s, color 0.3s;
+}
 
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', sans-serif;
-      color: var(--text);
-      background-color: var(--bg);
-      transition: background 0.3s, color 0.3s;
-    }
+a {
+  color: var(--link);
+  text-decoration: none;
+}
 
-    #background-slideshow {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: -1;
-      overflow: hidden;
-    }
+a:hover {
+  text-decoration: underline;
+}
 
-    #background-slideshow img {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      opacity: 0;
-      transition: opacity 2s ease-in-out;
-    }
+.anime-card a {
+  color: var(--link);
+  font-weight: bold;
+  font-size: 1.05rem;
+}
 
-    #background-slideshow img.active {
-      opacity: 1;
-    }
+.app {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 12px;
+  margin-top: 20px;
+}
 
-    .app {
-      max-width: 960px;
-      margin: 0 auto;
-      padding: 10px;
-      background: rgba(0, 0, 0, 0.7);
-      border-radius: 12px;
-      margin-top: 20px;
-    }
+h1 {
+  text-align: center;
+  font-size: 2.2rem;
+  margin-bottom: 20px;
+}
 
-    h1 {
-      text-align: center;
-      font-size: 2.2rem;
-      margin-bottom: 20px;
-    }
+select, input, button {
+  font-size: 1rem;
+  margin: 6px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #444;
+  background: var(--card);
+  color: var(--text);
+  max-width: 100%;
+}
 
-    select, input, button {
-      font-size: 1rem;
-      margin: 6px;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #444;
-      background: var(--card);
-      color: var(--text);
-      max-width: 100%;
-    }
+select[multiple] {
+  height: 150px;
+}
 
-    select[multiple] {
-      height: 150px;
-    }
+.controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+  padding: 0 10px;
+}
 
-    .controls {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 15px;
-      padding: 0 10px;
-    }
+#results {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 15px;
+  margin-top: 20px;
+}
 
-    #results {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 15px;
-      margin-top: 20px;
-    }
+.anime-card {
+  background: var(--card);
+  border-radius: 10px;
+  padding: 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: 0.3s;
+}
 
-    .anime-card {
-      background: var(--card);
-      border-radius: 10px;
-      padding: 10px;
-      text-align: center;
-      cursor: pointer;
-      transition: 0.3s;
-    }
+.anime-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
 
-    .anime-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    }
+.anime-card img {
+  max-width: 100%;
+  border-radius: 10px;
+}
 
-    .anime-card img {
-      max-width: 100%;
-      border-radius: 10px;
-    }
+.loader {
+  text-align: center;
+  margin-top: 20px;
+  font-style: italic;
+}
 
-    .loader {
-      text-align: center;
-      margin-top: 20px;
-      font-style: italic;
-    }
+.pagination {
+  text-align: center;
+  margin-top: 20px;
+}
 
-    .pagination {
-      text-align: center;
-      margin-top: 20px;
-    }
+.pagination button {
+  margin: 0 5px;
+  padding: 8px 14px;
+  background-color: var(--card);
+  color: var(--text);
+  border: 1px solid #444;
+  border-radius: 6px;
+  cursor: pointer;
+}
 
-    .pagination button {
-      margin: 0 5px;
-      padding: 8px 14px;
-      background-color: var(--card);
-      color: var(--text);
-      border: 1px solid #444;
-      border-radius: 6px;
-      cursor: pointer;
-    }
+@media (max-width: 600px) {
+  h1 { font-size: 1.6rem; }
+  button, input, select { font-size: 0.9rem; padding: 8px; }
+  .controls {
+    flex-direction: column;
+    padding: 0 5px;
+  }
+  .anime-card h3 {
+    font-size: 1rem;
+  }
+}
 
-    @media (max-width: 600px) {
-      h1 { font-size: 1.6rem; }
-      button, input, select { font-size: 0.9rem; padding: 8px; }
-      .controls {
-        flex-direction: column;
-        padding: 0 5px;
-      }
-      .anime-card h3 {
-        font-size: 1rem;
-      }
-    }
   </style>
 </head>
 <body>
-  <div id="background-slideshow">
-    <img src="https://i.pinimg.com/736x/4b/b8/e9/4bb8e931640dcff50f8e670c86919e1b.jpg" class="active" />
-    <img src="https://images7.alphacoders.com/740/740446.jpg" />
-    <img src="https://i.pinimg.com/736x/55/de/67/55de67fcdbe9f06e1eb1caed4fd9510f.jpg" />
-    <img src="https://i.pinimg.com/736x/c9/75/9a/c9759a3fae3c0a8d8e573b29763be8fc.jpg" />
-  </div>
-
   <div class="app">
     <h1>Anime Explorer</h1>
     <div class="controls">
@@ -177,14 +163,11 @@
       </select>
       <button onclick="handleSearch()">Search</button>
       <button onclick="getRandomAnime()">Random Must Watch</button>
-    </div>
+    </div><div class="loader" id="loader" style="display: none;">Loading...</div>
+<div id="results"></div>
+<div class="pagination" id="pagination"></div>
 
-    <div class="loader" id="loader" style="display: none;">Loading...</div>
-    <div id="results"></div>
-    <div class="pagination" id="pagination"></div>
-  </div>
-
-  <script>
+  </div>  <script>
     const loader = document.getElementById("loader");
     const resultsContainer = document.getElementById("results");
     const genreSelect = document.getElementById("genre-select");
@@ -238,6 +221,7 @@
                   coverImage { large }
                   genres
                   siteUrl
+                  description(asHtml: false)
                 }
               }
             }`,
@@ -261,11 +245,10 @@
 
         return `
           <div class="anime-card">
-            <a href="${animeUrl}" target="_blank">
-              <img src="${anime.coverImage.large}" alt="${anime.title.romaji}" />
-              <h3>${anime.title.romaji}</h3>
-              <p>${anime.genres.join(", ")}</p>
-            </a>
+            <img src="${anime.coverImage.large}" alt="${anime.title.romaji}" />
+            <h3><a href="${animeUrl}" target="_blank">${anime.title.romaji}</a></h3>
+            <p>${anime.genres.join(", ")}</p>
+            <p>${anime.description ? anime.description.substring(0, 100).replace(/<[^>]+>/g, '') + '...' : 'No description available.'}</p>
           </div>
         `;
       }).join("");
@@ -306,6 +289,7 @@
                     coverImage { large }
                     genres
                     siteUrl
+                    description(asHtml: false)
                   }
                 }
               }
@@ -327,15 +311,5 @@
         loader.style.display = "none";
       }
     }
-
-    // Background Slideshow
-    const slides = document.querySelectorAll("#background-slideshow img");
-    let index = 0;
-    setInterval(() => {
-      slides[index].classList.remove("active");
-      index = (index + 1) % slides.length;
-      slides[index].classList.add("active");
-    }, 8000);
-  </script>
-</body>
+  </script></body>
 </html>
