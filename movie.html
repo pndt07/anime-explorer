@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Anime Explorer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --bg: #111;
+      --text: #fff;
+      --card: #222;
+      --highlight: #ff4081;
+      --accent: #3b82f6;
+    }
+
+    [data-theme="light"] {
+      --bg: #f0f0f0;
+      --text: #000;
+      --card: #fff;
+      --highlight: #d81b60;
+      --accent: #2563eb;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      transition: background 0.3s, color 0.3s;
+      position: relative;
+      min-height: 100vh;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-image: url('https://images7.alphacoders.com/740/thumb-1920-740446.jpg');
+      background-size: cover;
+      background-position: center;
+      opacity: 0.15;
+      filter: blur(2px);
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    .app {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .anime-card {
+      transition: transform 0.3s ease, box-shadow 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .anime-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .anime-card img {
+      transition: transform 0.3s ease;
+    }
+
+    .anime-card:hover img {
+      transform: scale(1.05);
+    }
+
+    .anime-card::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 100%;
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, transparent 100%);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .anime-card:hover::after {
+      opacity: 1;
+    }
+
+    .anime-card .card-content {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 20px;
+      z-index: 2;
+      transform: translateY(100%);
+      transition: transform 0.3s;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(5px);
+    }
+
+    .anime-card:hover .card-content {
+      transform: translateY(0);
+    }
+
+    .skeleton {
+      animation: skeleton-loading 1s linear infinite alternate;
+    }
+
+    @keyframes skeleton-loading {
+      0% {
+        background-color: hsl(200, 20%, 70%);
+      }
+
+      100% {
+        background-color: hsl(200, 20%, 95%);
+      }
+    }
+
+    .dark .skeleton {
+      animation: skeleton-loading-dark 1s linear infinite alternate;
+    }
+
+    @keyframes skeleton-loading-dark {
+      0% {
+        background-color: hsl(200, 20%, 15%);
+      }
+
+      100% {
+        background-color: hsl(200, 20%, 30%);
+      }
+    }
+
+    .modal {
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+
+    .modal-content {
+      transform: translateY(-20px);
+      transition: transform 0.3s ease;
+    }
+
+    .modal.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal.active .modal-content {
+      transform: translateY(0);
+    }
+
+    .rating-stars {
+      color: #ffc107;
+    }
+
+    .rating-stars .empty {
+      color: #6b7280;
+    }
+
+    .tooltip {
+      position: relative;
+    }
+
+    .tooltip .tooltip-text {
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .tooltip:hover .tooltip-text {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.1);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--highlight);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--accent);
+    }
+  </style>
+</head>
+
+<body class="dark" data-theme="dark">
+  <div class="app">
+    <!-- Header -->
+    <header class="mb-8 text-center">
+      <h1
+        class="text-4xl font-bold mb-2 bg-gradient-to-r from-pink-500 via-red-500 to-blue-500 bg-clip-text text-transparent">
+        Anime Explorer
+      </h1>
+      <p class="text-gray-500 dark:text-gray-400">Discover, explore, and enjoy your favorite anime</p>
+    </header>
+
+    <!-- Controls -->
+    <div class="flex flex-wrap justify-center gap-4 mb-6">
+      <button
+        onclick="toggleTheme()"
+        class="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors"
+      >
+        <i class="fas fa-moon dark:hidden"></i>
+        <i class="fas fa-sun hidden dark:block"></i>
+        <span class="theme-text">Dark Mode</span>
+      </button>
+
+      <button
+        onclick="loadRandomRecommended()"
+        class="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-100 dark:bg-blue-900 hover:bg-blue-200 dark:hover:bg-blue-800 text-blue-800 dark:text-blue-200 transition-colors"
+      >
+        <i class="fas fa-random"></i>
+        Random Must-Watch
+      </button>
+
+      <button
+        onclick="toggleLinkSource()"
+        class="flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-100 dark:bg-purple-900 hover:bg-purple-200 dark:hover:bg-purple-800 text-purple-800 dark:text-purple-200 transition-colors"
+      >
+        <i class="fas fa-exchange-alt"></i>
+        <span id="link-source-text">AnimeKai Links</span>
+      </button>
+
+      <button
+        onclick="showBookmarks()"
+        class="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-100 dark:bg-green-900 hover:bg-green-200 dark:hover:bg-green-800 text-green-800 dark:text-green-200 transition-colors"
+      >
+        <i class="fas fa-bookmark"></i>
+        Bookmarks
+      </button>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification"
+      class="fixed top-4 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-lg shadow-lg bg-green-500 text-white hidden z-50">
+    </div>
+
+    <!-- Search -->
+    <div class="relative mb-8">
+      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <i class="fas fa-search text-gray-400"></i>
+      </div>
+      <input
+        id="search"
+        type="text"
+        placeholder="Search anime (min 3 characters)..."
+        class="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+      <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+        <button id="clear-search" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hidden">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading Skeleton -->
+    <div id="loading-skeleton" class="hidden grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-8">
+      <div class="skeleton h-64 rounded-lg"></div>
+      <div class="skeleton h-64 rounded-lg"></div>
+      <div class="skeleton h-64 rounded-lg"></div>
+      <div class="skeleton h-64 rounded-lg"></div>
+      <div class="skeleton h-64 rounded-lg"></div>
+    </div>
+
+    <!-- Results -->
+    <div id="results" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-8"></div>
+
+    <!-- No Results -->
+    <div id="no-results" class="hidden text-center py-12">
+      <i class="fas fa-search text-5xl text-gray-400 mb-4"></i>
+      <h3 class="text-xl font-semibold text-gray-600 dark:text-gray-300">No anime found</h3>
+      <p class="text-gray-500 dark:text-gray-400">Try a different search term</p>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal"
+      class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 opacity-0 invisible">
+      <div
+        class="modal-content bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+          <div class="flex justify-between items-start mb-4">
+            <h3 id="modal-title" class="text-xl font-bold"></h3>
+            <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div id="modal-body" class="text-gray-700 dark:text-gray-300"></div>
+          <div class="mt-6 flex justify-between items-center">
+            <button
+              id="bookmark-btn"
+              onclick="toggleBookmark()"
+              class="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
+            >
+              <i class="far fa-bookmark"></i> Bookmark
+            </button>
+            <button
+              id="watch-btn"
+              onclick="openWatchLink()"
+              class="px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white"
+            >
+              <i class="fas fa-play"></i> Watch Now
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bookmarks Modal -->
+    <div id="bookmarks-modal"
+      class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 opacity-0 invisible">
+      <div
+        class="modal-content bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+          <div class="flex justify-between items-start mb-4">
+            <h3 class="text-xl font-bold">Your Bookmarks</h3>
+            <button onclick="closeBookmarksModal()" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div id="bookmarks-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+          <div id="no-bookmarks" class="text-center py-12">
+            <i class="far fa-bookmark text-5xl text-gray-400 mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-600 dark:text-gray-300">No bookmarks yet</h3>
+            <p class="text-gray-500 dark:text-gray-400">Save your favorite anime to access them later</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Guide -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 mt-12">
+      <h2 class="text-2xl font-bold mb-4 text-center text-pink-500 dark:text-pink-400">
+        <i class="fas fa-info-circle mr-2"></i>How to Use Anime Explorer
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+          <h3 class="font-semibold text-lg mb-2 flex items-center">
+            <i class="fas fa-search text-blue-500 mr-2"></i>Searching
+          </h3>
+          <ul class="list-disc pl-5 space-y-1 text-gray-700 dark:text-gray-300">
+            <li>Start typing the name of an anime (at least 3 characters)</li>
+            <li>Results appear as you type with a slight delay</li>
+            <li>Click on any anime card to see more details</li>
+          </ul>
+        </div>
+
+        <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+          <h3 class="font-semibold text-lg mb-2 flex items-center">
+            <i class="fas fa-random text-purple-500 mr-2"></i>Discover
+          </h3>
+          <ul class="list-disc pl-5 space-y-1 text-gray-700 dark:text-gray-300">
+            <li>Use "Random Must-Watch" to discover new anime</li>
+            <li>Bookmark your favorites for quick access later</li>
+            <li>Toggle between different streaming sources</li>
+          </ul>
+        </div>
+
+        <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+          <h3 class="font-semibold text-lg mb-2 flex items-center">
+            <i class="fas fa-cog text-green-500 mr-2"></i>Customization
+          </h3>
+          <ul class="list-disc pl-5 space-y-1 text-gray-700 dark:text-gray-300">
+            <li>Toggle between light and dark themes</li>
+            <li>Choose your preferred streaming source</li>
+            <li>All settings are saved automatically</li>
+          </ul>
+        </div>
+
+        <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+          <h3 class="font-semibold text-lg mb-2 flex items-center">
+            <i class="fas fa-shield-alt text-red-500 mr-2"></i>Security
+          </h3>
+          <ul class="list-disc pl-5 space-y-1 text-gray-700 dark:text-gray-300">
+            <li>All external links open with confirmation</li>
+            <li>No tracking or data collection</li>
+            <li>All data is processed locally</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-12 text-center text-gray-500 dark:text-gray-400 text-sm">
+      <p>Anime Explorer - All anime data provided by <a href="https://anilist.co" target="_blank"
+          rel="noopener noreferrer" class="text-blue-500 hover:underline">AniList</a></p>
+      <p class="mt-1">Made with <i class="fas fa-heart text-red-500"></i> for anime fans</p>
+    </footer>
+  </div>
+
+  <script>
+    // DOM Elements
+    const searchInput = document.getElementById("search");
+    const resultsContainer = document.getElementById("results");
+    const notification = document.getElementById("notification");
+    const loadingSkeleton = document.getElementById("loading-skeleton");
+    const noResults = document.getElementById("no-results");
+    const clearSearch = document.getElementById("clear-search");
+    const modal = document.getElementById("modal");
+    const modalTitle = document.getElementById("modal-title");
+    const modalBody = document.getElementById("modal-body");
+    const bookmarkBtn = document.getElementById("bookmark-btn");
+    const watchBtn = document.getElementById("watch-btn");
+    const bookmarksModal = document.getElementById("bookmarks-modal");
+    const bookmarksList = document.getElementById("bookmarks-list");
+    const noBookmarks = document.getElementById("no-bookmarks");
+
+    // State
+    let searchTimeout;
+    let linkSource = localStorage.getItem('linkSource') || "animekai";
+    let currentAnime = null;
+    let bookmarks = JSON.parse(localStorage.getItem('bookmarks')) || [];
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      updateLinkSourceText();
+      updateThemeText();
+      checkBookmarks();
+      
+      // Set up clear search button
+      clearSearch.addEventListener('click', () => {
+        searchInput.value = '';
+        searchInput.focus();
+        clearSearch.classList.add('hidden');
+        resultsContainer.innerHTML = '';
+        noResults.classList.add('hidden');
+      });
+      
+      // Show/hide clear button based on search input
+      searchInput.addEventListener('input', () => {
+        if (searchInput.value.length > 0) {
+          clearSearch.classList.remove('hidden');
+        } else {
+          clearSearch.classList.add('hidden');
+        }
+      });
+
+      // Close modal when clicking outside
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          closeModal();
+        }
+      });
+
+      // Close bookmarks modal when clicking outside
+      bookmarksModal.addEventListener('click', (e) => {
+        if (e.target === bookmarksModal) {
+          closeBookmarksModal();
+        }
+      });
+    });
+
+    // Theme Toggle
+    function toggleTheme() {
+      const currentTheme = document.body.getAttribute("data-theme");
+      const newTheme = currentTheme === "light" ? "dark" : "light";
+      document.body.setAttribute("data-theme", newTheme);
+      localStorage.setItem('theme', newTheme);
+      updateThemeText();
+    }
+
+    function updateThemeText() {
+      const currentTheme = document.body.getAttribute("data-theme");
+      const themeTexts = document.querySelectorAll('.theme-text');
+      themeTexts.forEach(el => {
+        el.textContent = currentTheme === "light" ? "Dark Mode" : "Light Mode";
+      });
+    }
+
+    // Link Source Toggle
+    function toggleLinkSource() {
+      linkSource = linkSource === "animekai" ? "hianimez" : "animekai";
+      localStorage.setItem('linkSource', linkSource);
+      updateLinkSourceText();
+      showNotification(`Now using links from ${linkSource === 'animekai' ? 'AnimeKai' : 'HiAnimeZ'}`);
+      
+      // Refresh current results if any
+      if (searchInput.value.length >= 3) {
+        searchAnime(searchInput.value.trim()).then(displayAnime);
+      }
+    }
+
+    function updateLinkSourceText() {
+      document.getElementById('link-source-text').textContent = 
+        `${linkSource === 'animekai' ? 'AnimeKai' : 'HiAnimeZ'} Links`;
+    }
+
+    // Notification
+    function showNotification(message, type = 'success') {
+      notification.textContent = message;
+      notification.className = `fixed top-4 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-lg shadow-lg ${
+        type === 'success' ? 'bg-green-500' : 
+        type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+      } text-white z-50`;
+      notification.classList.remove('hidden');
+      
+      setTimeout(() => {
+        notification.classList.add('hidden');
+      }, 3000);
+    }
+
+    // Search
+    searchInput.addEventListener("input", () => {
+      clearTimeout(searchTimeout);
+      const query = searchInput.value.trim();
+      
+      if (query.length < 3) {
+        resultsContainer.innerHTML = "";
+        noResults.classList.add('hidden');
+        loadingSkeleton.classList.add('hidden');
+        return;
+      }
+      
+      loadingSkeleton.classList.remove('hidden');
+      resultsContainer.innerHTML = "";
+      noResults.classList.add('hidden');
+      
+      searchTimeout = setTimeout(async () => {
+        try {
+          const animeList = await searchAnime(query);
+          displayAnime(animeList);
+          loadingSkeleton.classList.add('hidden');
+          
+          if (animeList.length === 0) {
+            noResults.classList.remove('hidden');
+          }
+        } catch (error) {
+          console.error("Search error:", error);
+          showNotification("Failed to search anime. Please try again.", 'error');
+          loadingSkeleton.classList.add('hidden');
+        }
+      }, 500);
+    });
+
+    // API Functions
+    async function fetchAnimeDetails(id) {
+      try {
+        const response = await fetch("https://graphql.anilist.co", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+          },
+          body: JSON.stringify({
+            query: `
+              query ($id: Int) {
+                Media(id: $id, type: ANIME) {
+                  id
+                  title {
+                    romaji
+                    english
+                    native
+                  }
+                  description(asHtml: false)
+                  coverImage {
+                    large
+                    extraLarge
+                    color
+                  }
+                  bannerImage
+                  startDate {
+                    year
+                    month
+                    day
+                  }
+                  endDate {
+                    year
+                    month
+                    day
+                  }
+                  season
+                  seasonYear
+                  type
+                  format
+                  status
+                  episodes
+                  duration
+                  chapters
+                  volumes
+                  genres
+                  synonyms
+                  averageScore
+                  meanScore
+                  popularity
+                  trending
+                  favourites
+                  trailer {
+                    id
+                    site
+                    thumbnail
+                  }
+                  studios(isMain: true) {
+                    edges {
+                      node {
+                        name
+                      }
+                    }
+                  }
+                  siteUrl
+                }
+              }
+            `,
+            variables: { id: parseInt(id) }
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`API request failed with status ${response.status}`);
+        }
+
+        const json = await response.json();
+        return json.data.Media;
+      } catch (error) {
+        console.error("Error fetching anime details:", error);
+        showNotification("Failed to load anime details. Please try again.", 'error');
+        return null;
+      }
+    }
+
+    async function searchAnime(query) {
+      try {
+        const response = await fetch("https://graphql.anilist.co", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+          },
+          body: JSON.stringify({
+            query: `
+              query ($search: String, $perPage: Int) {
+                Page(perPage: $perPage) {
+                  media(search: $search, type: ANIME, sort: POPULARITY_DESC) {
+                    id
+                    title {
+                      romaji
+                    }
+                    coverImage {
+                      large
+                    }
+                    averageScore
+                    genres
+                    format
+                  }
+                }
+              }
+            `,
+            variables: { 
+              search: query,
+              perPage: 20
+            }
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`API request failed with status ${response.status}`);
+        }
+
+        const json = await response.json();
+        return json.data.Page.media.filter(anime => anime.title && anime.coverImage);
+      } catch (error) {
+        console.error("Error searching anime:", error);
+        throw error;
+      }
+    }
+
+    // Display Results
+    function displayAnime(animeList) {
+      if (!animeList || animeList.length === 0) {
+        noResults.classList.remove('hidden');
+        return;
+      }
+
+      resultsContainer.innerHTML = animeList.map(anime => {
+        const title = anime.title.romaji;
+        const score = anime.averageScore ? Math.round(anime.averageScore / 10) : null;
+        const encodedTitle = encodeURIComponent(title);
+        const link = linkSource === "animekai"
+          ? `https://animekai.bz/browser?keyword=${encodedTitle}`
+          : `https://hianimez.to/search?keyword=${encodedTitle}`;
+
+        // Create rating stars
+        let starsHtml = '';
+        if (score) {
+          for (let i = 1; i <= 5; i++) {
+            if (i <= score) {
+              starsHtml += '<i class="fas fa-star"></i>';
+            } else {
+              starsHtml += '<i class="far fa-star empty"></i>';
+            }
+          }
+        }
+
+        return `
+          <div class="anime-card relative rounded-lg overflow-hidden cursor-pointer h-64" 
+               onclick="showAnimeDetails(${anime.id})"
+               data-anime-id="${anime.id}"
+               data-watch-link="${link}"
+               data-title="${title.replace(/"/g, '&quot;')}">
+            <img src="${anime.coverImage.large}" alt="${title}" class="w-full h-full object-cover" />
+            <div class="absolute inset-0 flex flex-col justify-end p-4 bg-gradient-to-t from-black to-transparent">
+              <h3 class="text-white font-semibold truncate">${title}</h3>
+              <div class="flex items-center justify-between mt-1">
+                <div class="text-sm text-gray-300">
+                  ${anime.format || 'Unknown'} • ${anime.genres.slice(0, 2).join(', ')}
+                </div>
+                ${score ? `
+                <div class="flex items-center text-yellow-400 text-sm">
+                  <span class="mr-1">${score}/5</span>
+                  <div class="rating-stars text-xs">${starsHtml}</div>
+                </div>
+                ` : ''}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    // Random Recommended
+    async function loadRandomRecommended() {
+      try {
+        loadingSkeleton.classList.remove('hidden');
+        resultsContainer.innerHTML = "";
+        noResults.classList.add('hidden');
+        
+        const response = await fetch("https://graphql.anilist.co", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+          },
+          body: JSON.stringify({
+            query: `
+              query ($perPage: Int, $minScore: Int) {
+                Page(perPage: $perPage) {
+                  media(type: ANIME, isAdult: false, sort: POPULARITY_DESC, averageScore_greater: $minScore) {
+                    id
+                    title {
+                      romaji
+                    }
+                    coverImage {
+                      large
+                    }
+                    averageScore
+                    genres
+                    format
+                  }
+                }
+              }
+            `,
+            variables: { 
+              perPage: 50,
+              minScore: 70
+            }
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`API request failed with status ${response.status}`);
+        }
+
+        const json = await response.json();
+        const animeList = json.data.Page.media.filter(anime => anime.title && anime.coverImage);
+        const randomAnimeList = getRandomAnime(animeList, 10);
+        displayAnime(randomAnimeList);
+        loadingSkeleton.classList.add('hidden');
+        showNotification("Loaded random must-watch anime!");
+      } catch (error) {
+        console.error("Error loading random anime:", error);
+        showNotification("Failed to load random anime. Please try again.", 'error');
+        loadingSkeleton.classList.add('hidden');
+      }
+    }
+
+    function getRandomAnime(list, num) {
+      const shuffled = [...list].sort(() => 0.5 - Math.random());
+      return shuffled.slice(0, num);
+    }
+
+    // Anime Details Modal
+    async function showAnimeDetails(id) {
+      try {
+        loadingSkeleton.classList.remove('hidden');
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        
+        const anime = await fetchAnimeDetails(id);
+        if (!anime) return;
+        
+        currentAnime = anime;
+        
+        // Set modal title
+        modalTitle.textContent = anime.title.romaji || anime.title.english || anime.title.native;
+        
+        // Prepare details content
+        let detailsHtml = '';
+        
+        // Add banner if available
+        if (anime.bannerImage) {
+          detailsHtml += `
+            <div class="mb-4 rounded-lg overflow-hidden">
+              <img src="${anime.bannerImage}" alt="Banner" class="w-full h-32 object-cover">
+            </div>
+          `;
+        }
+        
+        // Add basic info
+        detailsHtml += `
+          <div class="mb-4">
+            <div class="flex items-center mb-2">
+              ${anime.coverImage.large ? `
+              <img src="${anime.coverImage.large}" alt="Cover" class="w-16 h-24 object-cover rounded mr-3">
+              ` : ''}
+              <div>
+                ${anime.title.english && anime.title.english !== anime.title.romaji ? `
+                <p class="text-sm text-gray-500 dark:text-gray-400">${anime.title.english}</p>
+                ` : ''}
+                ${anime.title.native ? `
+                <p class="text-sm text-gray-500 dark:text-gray-400">${anime.title.native}</p>
+                ` : ''}
+              </div>
+            </div>
+            
+            ${anime.averageScore ? `
+            <div class="flex items-center mb-2">
+              <div class="rating-stars mr-2">
+                ${Array(Math.floor(anime.averageScore / 20)).fill('<i class="fas fa-star"></i>').join('')}
+                ${Array(5 - Math.floor(anime.averageScore / 20)).fill('<i class="far fa-star empty"></i>').join('')}
+              </div>
+              <span class="text-sm font-semibold">${anime.averageScore}%</span>
+            </div>
+            ` : ''}
+            
+            <div class="grid grid-cols-2 gap-2 text-sm">
+              ${anime.format ? `<div><span class="font-semibold">Format:</span> ${anime.format}</div>` : ''}
+              ${anime.episodes ? `<div><span class="font-semibold">Episodes:</span> ${anime.episodes}</div>` : ''}
+              ${anime.duration ? `<div><span class="font-semibold">Duration:</span> ${anime.duration} min</div>` : ''}
+              ${anime.status ? `<div><span class="font-semibold">Status:</span> ${anime.status}</div>` : ''}
+              ${anime.season && anime.seasonYear ? `<div><span class="font-semibold">Aired:</span> ${anime.season} ${anime.seasonYear}</div>` : ''}
+              ${anime.studios?.edges[0]?.node?.name ? `<div><span class="font-semibold">Studio:</span> ${anime.studios.edges[0].node.name}</div>` : ''}
+            </div>
+          </div>
+        `;
+        
+        // Add genres
+        if (anime.genres?.length > 0) {
+          detailsHtml += `
+            <div class="mb-4">
+              <h4 class="font-semibold mb-1">Genres</h4>
+              <div class="flex flex-wrap gap-1">
+                ${anime.genres.map(genre => `
+                  <span class="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded-full text-xs">${genre}</span>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        }
+        
+        // Add description
+        if (anime.description) {
+          detailsHtml += `
+            <div class="mb-4">
+              <h4 class="font-semibold mb-1">Description</h4>
+              <p class="text-sm">${anime.description.replace(/<[^>]*>?/gm, '')}</p>
+            </div>
+          `;
+        }
+        
+        // Add trailer if available
+        if (anime.trailer?.id && anime.trailer.site === 'youtube') {
+          detailsHtml += `
+            <div class="mb-4">
+              <h4 class="font-semibold mb-2">Trailer</h4>
+              <div class="aspect-w-16 aspect-h-9">
+                <img 
+                  src="https://img.youtube.com/vi/${anime.trailer.id}/hqdefault.jpg" 
+                  alt="Trailer" 
+                  class="w-full rounded-lg cursor-pointer"
+                  onclick="openTrailer('${anime.trailer.id}')"
+                >
+                <div class="absolute inset-0 flex items-center justify-center">
+                  <i class="fas fa-play text-4xl text-white bg-red-500 rounded-full p-3"></i>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+        
+        // Add official site link
+        if (anime.siteUrl) {
+          detailsHtml += `
+            <div class="mb-4">
+              <h4 class="font-semibold mb-1">Official Links</h4>
+              <a 
+                href="${anime.siteUrl}" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                class="inline-flex items-center text-blue-500 hover:underline"
+              >
+                <i class="fas fa-external-link-alt mr-1"></i> AniList Page
+              </a>
+            </div>
+          `;
+        }
+        
+        // Set modal content
+        modalBody.innerHTML = detailsHtml;
+        
+        // Update watch button
+        const card = document.querySelector(`.anime-card[data-anime-id="${id}"]`);
+        if (card) {
+          watchBtn.setAttribute('data-watch-link', card.dataset.watchLink);
+        }
+        
+        // Update bookmark button
+        updateBookmarkButton();
+        
+        loadingSkeleton.classList.add('hidden');
+      } catch (error) {
+        console.error("Error showing anime details:", error);
+        showNotification("Failed to load anime details. Please try again.", 'error');
+        loadingSkeleton.classList.add('hidden');
+        closeModal();
+      }
+    }
+
+    function openTrailer(id) {
+      window.open(`https://www.youtube.com/watch?v=${id}`, '_blank');
+    }
+
+    function closeModal() {
+      modal.classList.remove('active');
+      document.body.style.overflow = '';
+      currentAnime = null;
+    }
+
+    function openWatchLink() {
+      const link = watchBtn.getAttribute('data-watch-link');
+      if (link) {
+        window.open(link, '_blank', 'noopener,noreferrer');
+      }
+    }
+
+    // Bookmarks
+    function toggleBookmark() {
+      if (!currentAnime) return;
+      
+      const index = bookmarks.findIndex(b => b.id === currentAnime.id);
+      
+      if (index === -1) {
+        // Add bookmark
+        bookmarks.push({
+          id: currentAnime.id,
+          title: currentAnime.title.romaji || currentAnime.title.english || currentAnime.title.native,
+          coverImage: currentAnime.coverImage.large,
+          link: watchBtn.getAttribute('data-watch-link')
+        });
+        showNotification("Added to bookmarks!");
+      } else {
+        // Remove bookmark
+        bookmarks.splice(index, 1);
+        showNotification("Removed from bookmarks!");
+      }
+      
+      // Save to localStorage
+      localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
+      updateBookmarkButton();
+    }
+
+    function updateBookmarkButton() {
+      if (!currentAnime) return;
+      
+      const isBookmarked = bookmarks.some(b => b.id === currentAnime.id);
+      
+      if (isBookmarked) {
+        bookmarkBtn.innerHTML = '<i class="fas fa-bookmark"></i> Bookmarked';
+        bookmarkBtn.classList.add('bg-blue-100', 'dark:bg-blue-900', 'text-blue-800', 'dark:text-blue-200');
+      } else {
+        bookmarkBtn.innerHTML = '<i class="far fa-bookmark"></i> Bookmark';
+        bookmarkBtn.classList.remove('bg-blue-100', 'dark:bg-blue-900', 'text-blue-800', 'dark:text-blue-200');
+      }
+    }
+
+    function showBookmarks() {
+      bookmarksModal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+      renderBookmarks();
+    }
+
+    function closeBookmarksModal() {
+      bookmarksModal.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    function renderBookmarks() {
+      if (bookmarks.length === 0) {
+        noBookmarks.classList.remove('hidden');
+        bookmarksList.innerHTML = '';
+        return;
+      }
+      
+      noBookmarks.classList.add('hidden');
+      bookmarksList.innerHTML = bookmarks.map(bookmark => `
+        <div class="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg p-3">
+          <img src="${bookmark.coverImage}" alt="${bookmark.title}" class="w-16 h-24 object-cover rounded mr-3">
+          <div class="flex-1 min-w-0">
+            <h4 class="font-semibold truncate">${bookmark.title}</h4>
+            <div class="flex mt-2 space-x-2">
+              <button 
+                onclick="window.open('${bookmark.link}', '_blank', 'noopener,noreferrer')" 
+                class="px-3 py-1 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded"
+              >
+                <i class="fas fa-play mr-1"></i> Watch
+              </button>
+              <button 
+                onclick="removeBookmark(${bookmark.id})" 
+                class="px-3 py-1 text-sm bg-red-500 hover:bg-red-600 text-white rounded"
+              >
+                <i class="fas fa-trash-alt mr-1"></i> Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function removeBookmark(id) {
+      bookmarks = bookmarks.filter(b => b.id !== id);
+      localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
+      
+      if (currentAnime?.id === id) {
+        updateBookmarkButton();
+      }
+      
+      renderBookmarks();
+      checkBookmarks();
+    }
+
+    function checkBookmarks() {
+      if (bookmarks.length === 0) {
+        noBookmarks.classList.remove('hidden');
+      } else {
+        noBookmarks.classList.add('hidden');
+      }
+    }
+
+    // Initialize theme from localStorage
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      document.body.setAttribute('data-theme', savedTheme);
+    }
+  </script>
+</body>
+
+</html>
