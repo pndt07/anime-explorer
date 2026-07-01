@@ -491,7 +491,7 @@
       linkSource = linkSource === "animekai" ? "hianimez" : "animekai";
       localStorage.setItem('linkSource', linkSource);
       updateLinkSourceText();
-      showNotification(`Now using links from ${linkSource === 'animekai' ? 'AnimeKai' : 'HiAnimeZ'}`);
+      showNotification(`Now using links from ${linkSource === 'animekai' ? 'AniKotoTV' : 'MKissa'}`);
       
       // Refresh current results if any
       if (searchInput.value.length >= 3) {
@@ -501,7 +501,7 @@
 
     function updateLinkSourceText() {
       document.getElementById('link-source-text').textContent = 
-        `${linkSource === 'animekai' ? 'AnimeKai' : 'HiAnimeZ'} Links`;
+        `${linkSource === 'animekai' ? 'AniKotoTV' : 'MKissa'} Links`;
     }
 
     // Notification
@@ -694,8 +694,8 @@
         const score = anime.averageScore ? Math.round(anime.averageScore / 10) : null;
         const encodedTitle = encodeURIComponent(title);
         const link = linkSource === "animekai"
-          ? `https://animekai.bz/browser?keyword=${encodedTitle}`
-          : `https://hianime.to/search?keyword=${encodedTitle}`;
+          ? `https://anikototv.to/filter?keyword=${encodedTitle}`
+          : `https://mkissa.to/search/anime?sortBy=Latest_Update&sortDirection=-1&query=${encodedTitle}`;
 
         // Create rating stars
         let starsHtml = '';
@@ -890,17 +890,23 @@
           detailsHtml += `
             <div class="mb-4">
               <h4 class="font-semibold mb-2">Trailer</h4>
-              <div class="aspect-w-16 aspect-h-9">
-                <img 
-                  src="https://img.youtube.com/vi/${anime.trailer.id}/hqdefault.jpg" 
-                  alt="Trailer" 
-                  class="w-full rounded-lg cursor-pointer"
-                  onclick="openTrailer('${anime.trailer.id}')"
+              <button
+                type="button"
+                onclick="openTrailer('${anime.trailer.id}')"
+                class="relative block w-full overflow-hidden rounded-lg group focus:outline-none focus:ring-2 focus:ring-red-500"
+                aria-label="Open trailer"
+              >
+                <img
+                  src="https://img.youtube.com/vi/${anime.trailer.id}/hqdefault.jpg"
+                  alt="Trailer"
+                  class="w-full aspect-video object-cover"
                 >
-                <div class="absolute inset-0 flex items-center justify-center">
-                  <i class="fas fa-play text-4xl text-white bg-red-500 rounded-full p-3"></i>
-                </div>
-              </div>
+                <span class="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
+                  <span class="flex h-14 w-14 items-center justify-center rounded-full bg-red-500 text-white shadow-lg">
+                    <i class="fas fa-play text-2xl ml-1"></i>
+                  </span>
+                </span>
+              </button>
             </div>
           `;
         }
